@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     REDIS_URL: str
     ALLOWED_ORIGINS: str = "http://localhost:3000"
     ENV: str = "dev"
+    DEBUG: bool = False
 
     class Config:
         env_file = ".env"

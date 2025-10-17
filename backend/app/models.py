@@ -6,6 +6,7 @@ class TrendSample(Base):
     __tablename__ = "trend_samples"
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     tag: Mapped[str] = mapped_column(String(64), index=True)
+    video_id: Mapped[str] = mapped_column(String(128), index=True)
     author: Mapped[str] = mapped_column(String(64))
     likes: Mapped[int] = mapped_column(BigInteger)
     views: Mapped[int] = mapped_column(BigInteger)
