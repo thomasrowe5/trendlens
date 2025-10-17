@@ -1,9 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import trends, history
+
+from .db import Base, engine
+from .models import TrendSample
+from .routers import history, trends
 from .settings import settings
 
 app = FastAPI(title="TrendLens API")
+
+# Ensure tables exist on startup
+Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,

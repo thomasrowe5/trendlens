@@ -17,10 +17,11 @@ yarn-debug.log*
 pnpm-debug.log*
 
 # Env & local
-.env
 *.env
 .env.*
 .envrc
+# Keep default docker-compose env in version control
+!.env
 
 # Docker
 db_data/

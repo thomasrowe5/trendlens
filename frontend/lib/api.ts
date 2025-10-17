@@ -1,19 +1,36 @@
-export async function fetchVelocity(tag: string) {
-  const base =
-    process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "") ||
-    "http://localhost:8000";
-  const url = `${base}/api/trends?tag=${encodeURIComponent(tag)}`;
-  const r = await fetch(url, { cache: "no-store" });
-  if (!r.ok) throw new Error(`Request failed: ${r.status}`);
-  return await r.json();
+const base = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+const normalizedBase = base.endsWith("/") ? base.slice(0, -1) : base;
+
+async function fetchJson(path: string) {
+  const response = await fetch(`${normalizedBase}${path}`, {
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+  return response.json();
 }
 
-export async function fetchTop(tag: string) {
-  const base =
-    process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "") ||
-    "http://localhost:8000";
-  const url = `${base}/api/trends/top?tag=${encodeURIComponent(tag)}`;
-  const r = await fetch(url, { cache: "no-store" });
-  if (!r.ok) throw new Error(`Request failed: ${r.status}`);
-  return await r.json();
+export type TrendRecord = {
+  video_id: string;
+  author: string;
+  likes: number;
+  views: number;
+  comments: number;
+  collected_at?: string | null;
+  tag?: string;
+};
+
+export async function fetchTrends(tag: string): Promise<TrendRecord[]> {
+  return fetchJson(`/api/trends?tag=${encodeURIComponent(tag)}`);
+}
+
+export async function fetchTrendHistory(
+  tag?: string,
+  limit: number = 50
+): Promise<TrendRecord[]> {
+  const search = new URLSearchParams();
+  if (tag) search.set("tag", tag);
+  if (limit) search.set("limit", String(limit));
+  return fetchJson(`/api/trends/history?${search.toString()}`);
 }

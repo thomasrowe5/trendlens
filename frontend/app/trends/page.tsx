@@ -1,33 +1,39 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useCallback, useEffect, useState } from "react";
+
+import { fetchTrends, TrendRecord } from "@/lib/api";
 
 export default function Trends() {
   const [tag, setTag] = useState("fitness");
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<TrendRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
+    const cleanedTag = tag.trim();
+    if (!cleanedTag) {
+      setError("Enter a hashtag to search.");
+      setData([]);
+      return;
+    }
+
+    setLoading(true);
     try {
-      // Build a clean, absolute URL (avoids malformed pattern errors)
-      const base = "http://localhost:8000";
-      const url = `${base}/api/trends?tag=${encodeURIComponent(tag.trim())}`;
-      console.log("DEBUG – Fetching:", url);
-
-      const r = await fetch(url, { cache: "no-store" });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const json = await r.json();
+      const json = await fetchTrends(cleanedTag);
       setData(json);
       setError(null);
     } catch (err: any) {
-      console.error("Fetch error:", err);
       setError(err.message || "Unknown error");
       setData([]);
+    } finally {
+      setLoading(false);
     }
-  }
+  }, [tag]);
 
   useEffect(() => {
     fetchData();
-  }, [tag]);
+  }, [fetchData]);
 
   return (
     <main className="p-6">
@@ -43,8 +49,9 @@ export default function Trends() {
         <button
           onClick={fetchData}
           className="px-4 py-2 bg-white text-black rounded"
+          disabled={loading}
         >
-          Search
+          {loading ? "Loading..." : "Search"}
         </button>
       </div>
 
@@ -53,15 +60,18 @@ export default function Trends() {
       )}
 
       <div className="grid md:grid-cols-2 gap-3 mt-6">
-        {data.map((v, i) => (
-          <div key={i} className="p-3 border border-gray-700 rounded">
-            <p className="font-mono">{v.video_id}</p>
+        {data.map((v) => (
+          <div key={`${v.video_id}-${v.author}`} className="p-3 border border-gray-700 rounded">
+            <p className="font-mono break-words">{v.video_id}</p>
             <p className="text-gray-300 text-sm">@{v.author}</p>
             <p className="text-xs mt-1">
               👍 {v.likes} · 👁️ {v.views} · 💬 {v.comments}
             </p>
           </div>
         ))}
+        {!loading && !error && data.length === 0 && (
+          <p className="text-gray-400">No data yet. Try another hashtag.</p>
+        )}
       </div>
     </main>
   );
